@@ -7,6 +7,199 @@ import (
 	"github.com/kataras/iris/middleware/recover"
 )
 
+// Success: Return status is 200 on success with a body or 204 if there is no body data to return.
+// Redirects: Moved or aliased endpoints redirect with a 301. Endpoints redirecting to the latest version of a module may redirect with 302 or 307 to indicate that they logically point to different resources over time.
+// Client Errors: Invalid requests will receive the relevant 4xx status. Except where noted below, the request should not be retried.
+// Rate Limiting: Clients placing excessive load on the service might be rate-limited and receive a 429 code. This should be interpreted as a sign to slow down, and wait some time before retrying the request.
+// Service Errors: The usual 5xx errors will be returned for service failures. In all cases it is safe to retry the request after receiving a 5xx response.
+// Load Shedding: A 503 response indicates that the service is under load and can't process your request immediately. As with other 5xx errors you may retry after some delay, although clients should consider being more lenient with retry schedule in this case.
+
+type (
+	// Request ...
+	Request struct{}
+
+	// Response ...
+	Response struct {
+		Meta    Meta
+		Modules []Module
+		Errors  []string `json:"errors"`
+	}
+
+	// Meta ...
+	Meta struct {
+		Limit         int    `json:"limit"`
+		CurrentOffset int    `json:"current_offset"`
+		NextOffset    int    `json:"next_offset"`
+		NextURL       string `json:"next_url"`
+	}
+
+	// Module ...
+	Module struct {
+		ID          string `json:"id"`
+		Owner       string `json:"owner"`
+		Namespace   string `json:"namespace"`
+		Name        string `json:"name"`
+		Version     string `json:"version"`
+		Provider    string `json:"provider"`
+		Description string `json:"description"`
+		Source      string `json:"source"`
+		Published   string `json:"published_at"`
+		Downloads   int    `json:"downloads"`
+		Verified    bool   `json:"verified"`
+		Root        Root
+
+		Versions []Version `json:"versions"`
+	}
+
+	// Version ...
+	Version struct {
+		Version    string      `json:"version"`
+		Submodules []Submodule `json:"submodules"`
+		Root       struct {
+			Dependencies []string   `json:"dependencies"`
+			Providers    []Provider `json:"providers"`
+		}
+	}
+
+	// Submodule ..
+	Submodule struct {
+		Path      string     `json:"path"`
+		Providers []Provider `json:"providers"`
+	}
+
+	// Provider ...
+	Provider struct {
+		Name    string `json:"name"`
+		Version string `json:"verstion"`
+	}
+
+	// Input ...
+	Input struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Default     string `json:"default"`
+	}
+
+	// Output ...
+	Output struct {
+		Name        string `json:"name"`
+		Description string `json:"descripiton"`
+	}
+
+	// Root ...
+	Root struct {
+		Path         string     `json:"path"`
+		Readme       string     `json:"readme"`
+		Empty        bool       `json:"empty"`
+		Inputs       []Input    `json:"inputs"`
+		Outputs      []Output   `json:"outputs"`
+		Dependencies []string   `json:"dependencies"`
+		Resources    []Resource `json:"resources"`
+	}
+	// Resource ...
+	Resource struct {
+		Name string `json:"name"`
+		Type string `json:"type"`
+	}
+)
+
+// Example Response
+//
+// {
+// 	"meta": {
+// 	  "limit": 2,
+// 	  "current_offset": 0,
+// 	  "next_offset": 2,
+// 	  "next_url": "/v1/modules?limit=2&offset=2&verified=true"
+// 	},
+// 	"modules": [
+// 	  {
+// 		"id": "GoogleCloudPlatform/lb-http/google/1.0.4",
+// 		"owner": "",
+// 		"namespace": "GoogleCloudPlatform",
+// 		"name": "lb-http",
+// 		"version": "1.0.4",
+// 		"provider": "google",
+// 		"description": "Modular Global HTTP Load Balancer for GCE using forwarding rules.",
+// 		"source": "https://github.com/GoogleCloudPlatform/terraform-google-lb-http",
+// 		"published_at": "2017-10-17T01:22:17.792066Z",
+// 		"downloads": 213,
+// 		"verified": true
+// 	  },
+// 	  {
+// 		"id": "terraform-aws-modules/vpc/aws/1.5.1",
+// 		"owner": "",
+// 		"namespace": "terraform-aws-modules",
+// 		"name": "vpc",
+// 		"version": "1.5.1",
+// 		"provider": "aws",
+// 		"description": "Terraform module which creates VPC resources on AWS",
+// 		"source": "https://github.com/terraform-aws-modules/terraform-aws-vpc",
+// 		"published_at": "2017-11-23T10:48:09.400166Z",
+// 		"downloads": 29714,
+// 		"verified": true
+// 	  }
+// 	]
+//   }
+
+// {
+// 	"modules": [
+// 	   {
+// 		  "source": "hashicorp/consul/aws",
+// 		  "versions": [
+// 			 {
+// 				"version": "0.0.1",
+// 				"submodules" : [
+// 				   {
+// 					  "path": "modules/consul-cluster",
+// 					  "providers": [
+// 						 {
+// 							"name": "aws",
+// 							"version": ""
+// 						 }
+// 					  ],
+// 					  "dependencies": []
+// 				   },
+// 				   {
+// 					  "path": "modules/consul-security-group-rules",
+// 					  "providers": [
+// 						 {
+// 							"name": "aws",
+// 							"version": ""
+// 						 }
+// 					  ],
+// 					  "dependencies": []
+// 				   },
+// 				   {
+// 					  "providers": [
+// 						 {
+// 							"name": "aws",
+// 							"version": ""
+// 						 }
+// 					  ],
+// 					  "dependencies": [],
+// 					  "path": "modules/consul-iam-policies"
+// 				   }
+// 				],
+// 				"root": {
+// 				   "dependencies": [],
+// 				   "providers": [
+// 					  {
+// 						 "name": "template",
+// 						 "version": ""
+// 					  },
+// 					  {
+// 						 "name": "aws",
+// 						 "version": ""
+// 					  }
+// 				   ]
+// 				}
+// 			 }
+// 		  ]
+// 	   }
+// 	]
+//  }
+
 func Server() {
 	app := iris.New()
 	app.Logger().SetLevel("debug")
