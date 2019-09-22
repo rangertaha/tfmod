@@ -5,6 +5,11 @@ import (
 
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
+
+	"github.com/iris-contrib/swagger"
+	"github.com/iris-contrib/swagger/swaggerFiles"
+
+	_ "github.com/rangertaha/tfmod/docs"
 )
 
 // Success: Return status is 200 on success with a body or 204 if there is no body data to return.
@@ -103,103 +108,7 @@ type (
 	}
 )
 
-// Example Response
-//
-// {
-// 	"meta": {
-// 	  "limit": 2,
-// 	  "current_offset": 0,
-// 	  "next_offset": 2,
-// 	  "next_url": "/v1/modules?limit=2&offset=2&verified=true"
-// 	},
-// 	"modules": [
-// 	  {
-// 		"id": "GoogleCloudPlatform/lb-http/google/1.0.4",
-// 		"owner": "",
-// 		"namespace": "GoogleCloudPlatform",
-// 		"name": "lb-http",
-// 		"version": "1.0.4",
-// 		"provider": "google",
-// 		"description": "Modular Global HTTP Load Balancer for GCE using forwarding rules.",
-// 		"source": "https://github.com/GoogleCloudPlatform/terraform-google-lb-http",
-// 		"published_at": "2017-10-17T01:22:17.792066Z",
-// 		"downloads": 213,
-// 		"verified": true
-// 	  },
-// 	  {
-// 		"id": "terraform-aws-modules/vpc/aws/1.5.1",
-// 		"owner": "",
-// 		"namespace": "terraform-aws-modules",
-// 		"name": "vpc",
-// 		"version": "1.5.1",
-// 		"provider": "aws",
-// 		"description": "Terraform module which creates VPC resources on AWS",
-// 		"source": "https://github.com/terraform-aws-modules/terraform-aws-vpc",
-// 		"published_at": "2017-11-23T10:48:09.400166Z",
-// 		"downloads": 29714,
-// 		"verified": true
-// 	  }
-// 	]
-//   }
-
-// {
-// 	"modules": [
-// 	   {
-// 		  "source": "hashicorp/consul/aws",
-// 		  "versions": [
-// 			 {
-// 				"version": "0.0.1",
-// 				"submodules" : [
-// 				   {
-// 					  "path": "modules/consul-cluster",
-// 					  "providers": [
-// 						 {
-// 							"name": "aws",
-// 							"version": ""
-// 						 }
-// 					  ],
-// 					  "dependencies": []
-// 				   },
-// 				   {
-// 					  "path": "modules/consul-security-group-rules",
-// 					  "providers": [
-// 						 {
-// 							"name": "aws",
-// 							"version": ""
-// 						 }
-// 					  ],
-// 					  "dependencies": []
-// 				   },
-// 				   {
-// 					  "providers": [
-// 						 {
-// 							"name": "aws",
-// 							"version": ""
-// 						 }
-// 					  ],
-// 					  "dependencies": [],
-// 					  "path": "modules/consul-iam-policies"
-// 				   }
-// 				],
-// 				"root": {
-// 				   "dependencies": [],
-// 				   "providers": [
-// 					  {
-// 						 "name": "template",
-// 						 "version": ""
-// 					  },
-// 					  {
-// 						 "name": "aws",
-// 						 "version": ""
-// 					  }
-// 				   ]
-// 				}
-// 			 }
-// 		  ]
-// 	   }
-// 	]
-//  }
-
+// Server ...
 func Server() {
 	app := iris.New()
 	app.Logger().SetLevel("debug")
@@ -208,6 +117,12 @@ func Server() {
 	// and log the requests to the terminal.
 	app.Use(recover.New())
 	app.Use(logger.New())
+
+	// Method:   GET
+	// Resource: http://localhost:8080
+	app.Handle("GET", "/", func(ctx iris.Context) {
+		ctx.HTML("<h1>Welcome</h1>")
+	})
 
 	// Method:   GET
 	// Resource: http://localhost:8080
@@ -231,5 +146,12 @@ func Server() {
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
+
+	config := &swagger.Config{
+		URL: "http://localhost:8080/swagger/doc.json",
+	}
+	// use swagger middleware to
+	app.Get("/swagger/{any:path}", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
+
 	app.Run(iris.Addr(":8080"), iris.WithoutServerError(iris.ErrServerClosed))
 }
