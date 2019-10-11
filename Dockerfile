@@ -1,5 +1,5 @@
-# STEP 1 build executable binary
-############################
+
+############################# Stage 1
 FROM golang:alpine AS builder
 
 # Git is required for fetching the dependencies.
@@ -12,18 +12,17 @@ RUN go get -d -v
 
 # Build the binary.
 # RUN go build -o /go/bin/tfmod
-RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /usr/bin/tfmod
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/tfmod
 
-# STEP 2 build a small image
-############################
-FROM scratch
-# Copy our static executable.
-COPY --from=builder /usr/bin/tfmod /usr/bin/tfmod
+############################### Stage 2
+#FROM golang:latest
+## Copy our static executable.
+#COPY --from=builder /go/bin/tfmod /go/bin/tfmod
+#
+## Expose tfmod on port 8080
+#EXPOSE 8080
+#
+## Run the tfmod binary.
+##ENTRYPOINT ["/tfmod"]
 
-# Expose tfmod on port 8080
-EXPOSE 8080
-
-# Run the tfmod binary.
-ENTRYPOINT ["/go/bin/tfmod"]
-
-# CMD ["tfmod", "server"]
+CMD ["/go/bin/tfmod", "server"]

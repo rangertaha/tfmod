@@ -31,7 +31,7 @@ deps: ## Install Go library dependencies
 docker: image ## Build docker image and upload to docker hub
 	docker login
 
-image: build ## Build docker image
+image: ## Build docker image
 	docker build -t $(BINARY_NAME) .
 
 test: deps ## Run unit test
