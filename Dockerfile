@@ -1,11 +1,29 @@
-FROM golang:1.6
+# STEP 1 build executable binary
+############################
+FROM golang:alpine AS builder
 
-# Install tfmod
-RUN go get github.com/rangertaha/tfmod
+# Git is required for fetching the dependencies.
+RUN apk update && apk add --no-cache git
+WORKDIR /go/src/github.com/rangertaha/tfmod
+COPY . .
 
-# Expose the application on port 8080
+# Fetch dependencies.
+RUN go get -d -v
+
+# Build the binary.
+# RUN go build -o /go/bin/tfmod
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /usr/bin/tfmod
+
+# STEP 2 build a small image
+############################
+FROM scratch
+# Copy our static executable.
+COPY --from=builder /usr/bin/tfmod /usr/bin/tfmod
+
+# Expose tfmod on port 8080
 EXPOSE 8080
 
-# Set the entry point of the container to the bee command that runs the
-# application and watches for changes
-CMD ["tfmod", "server"]
+# Run the tfmod binary.
+ENTRYPOINT ["/go/bin/tfmod"]
+
+# CMD ["tfmod", "server"]

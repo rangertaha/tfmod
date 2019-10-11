@@ -31,7 +31,7 @@ deps: ## Install Go library dependencies
 docker: image ## Build docker image and upload to docker hub
 	docker login
 
-image: clean ## Build docker image
+image: build ## Build docker image
 	docker build -t $(BINARY_NAME) .
 
 test: deps ## Run unit test
@@ -51,3 +51,6 @@ doc: ## Go documentation
 push: image ## Push build to
 	docker tag $(BINARY_NAME) $(GCR_HOST)/$(GCP_PROJECT_ID)/$(BINARY_NAME)
 	docker push $(GCR_HOST)/$(GCP_PROJECT_ID)/$(BINARY_NAME)
+
+shell:
+	docker run --name $(BINARY_NAME) --rm -p 8080:8080 -i -t bash
