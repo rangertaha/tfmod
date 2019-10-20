@@ -10,7 +10,7 @@ GODOC=$(GOCMD)doc
 BINARY_NAME=tfmod
 VERSION=$(shell grep -e 'VERSION = ".*"' pkg/version.go | cut -d= -f2 | sed  s/[[:space:]]*\"//g)
 
-.PHONY: help
+.PHONY: help build install deps docker image test clean run doc push shell
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-10s\033[0m %s\n", $$1, $$2}'

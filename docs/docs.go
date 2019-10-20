@@ -581,11 +581,11 @@ type swaggerInfo struct {
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = swaggerInfo{
-	Version:     "0.1.1",
+	Version:     "0.0.1",
 	Host:        "localhost",
 	BasePath:    "/v1/modules",
 	Schemes:     []string{},
-	Title:       "Terraform Private Regestry",
+	Title:       "Private Terraform Regestry",
 	Description: "",
 }
 

@@ -1,5 +1,4 @@
-/*
-The MIT License (MIT)
+/* The MIT License (MIT)
 
 Copyright © 2019 rangertaha@gmail.com
 
@@ -19,12 +18,13 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-*/
+THE SOFTWARE. */
+
 package cmd
 
 import (
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/rangertaha/tfmod/pkg"
 )
@@ -40,15 +40,34 @@ var serverCmd = &cobra.Command{
 }
 
 func init() {
+
+	// Address host/port to serve the API
+	serverCmd.Flags().String("http.host", "0.0.0.0", "Host to expose the api server")
+	serverCmd.Flags().StringP("http.port", "p", "8080", "Port to expose the api server")
+
+	serverCmd.Flags().String("log.level", "debug", "Log level to use")
+	serverCmd.Flags().String("log.file", "/var/log/tfmod.log", "TFMod application log file")
+
+	// Bind Cobra flags to Viper configuations
+	viper.BindPFlag("http.host", serverCmd.Flags().Lookup("http.host"))
+	viper.BindPFlag("http.port", serverCmd.Flags().Lookup("http.port"))
+	// Set viper default values
+	viper.SetDefault("http.host", serverCmd.Flags().Lookup("http.host"))
+	viper.SetDefault("http.port", serverCmd.Flags().Lookup("http.port"))
+
+	// Prometheus metrics
+	serverCmd.Flags().String("metrics.host", "0.0.0.0", "Host to expose the metrics")
+	serverCmd.Flags().String("metrics.port", "8000", "Port to expose metrics")
+	serverCmd.Flags().String("metrics.path", "/metrics", "Metrics path to expose metrics")
+
+	// Bind Cobra flags to Viper configuations
+	viper.BindPFlag("metrics.host", serverCmd.Flags().Lookup("metrics.host"))
+	viper.BindPFlag("metrics.port", serverCmd.Flags().Lookup("metrics.port"))
+	viper.BindPFlag("metrics.path", serverCmd.Flags().Lookup("metrics.path"))
+	// Set viper default values
+	viper.SetDefault("metrics.host", serverCmd.Flags().Lookup("metrics.host"))
+	viper.SetDefault("metrics.port", serverCmd.Flags().Lookup("metrics.port"))
+	viper.SetDefault("metrics.path", serverCmd.Flags().Lookup("metrics.path"))
+
 	rootCmd.AddCommand(serverCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serverCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serverCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

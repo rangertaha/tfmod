@@ -1,7 +1,30 @@
+/* The MIT License (MIT)
+
+Copyright © 2019 rangertaha@gmail.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE. */
+
 package pkg
 
 import (
 	"github.com/kataras/iris"
+	"github.com/spf13/viper"
 
 	"github.com/kataras/iris/middleware/logger"
 	"github.com/kataras/iris/middleware/recover"
@@ -120,38 +143,39 @@ func Server() {
 
 	// Method:   GET
 	// Resource: http://localhost:8080
-	app.Handle("GET", "/", func(ctx iris.Context) {
-		ctx.HTML("<h1>Welcome</h1>")
-	})
+	config := &swagger.Config{
+		URL: "http://127.0.0.1:8080/doc.json",
+	}
+	// use swagger middleware to
+	// app.Get("/", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
 
-	// Method:   GET
-	// Resource: http://localhost:8080
-	app.Handle("GET", "/", func(ctx iris.Context) {
-		ctx.HTML("<h1>Welcome</h1>")
-	})
+	app.Get("/{any:path}", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
 
-	// same as app.Handle("GET", "/ping", [...])
-	// Method:   GET
-	// Resource: http://localhost:8080/ping
-	app.Get("/ping", func(ctx iris.Context) {
-		ctx.WriteString("pong")
-	})
+	// // Method:   GET
+	// // Resource: http://localhost:8080
+	// app.Handle("GET", "/", func(ctx iris.Context) {
+	// 	ctx.HTML("<h1>Welcome</h1>")
+	// })
 
-	// Method:   GET
-	// Resource: http://localhost:8080/hello
-	app.Get("/hello", func(ctx iris.Context) {
-		ctx.JSON(iris.Map{"message": "Hello Iris!"})
-	})
+	// // same as app.Handle("GET", "/ping", [...])
+	// // Method:   GET
+	// // Resource: http://localhost:8080/ping
+	// app.Get("/ping", func(ctx iris.Context) {
+	// 	ctx.WriteString("pong")
+	// })
+
+	// // Method:   GET
+	// // Resource: http://localhost:8080/hello
+	// app.Get("/hello", func(ctx iris.Context) {
+	// 	ctx.JSON(iris.Map{"message": "Hello Iris!"})
+	// })
 
 	// http://localhost:8080
 	// http://localhost:8080/ping
 	// http://localhost:8080/hello
 
-	config := &swagger.Config{
-		URL: "http://localhost:8080/swagger/doc.json",
-	}
-	// use swagger middleware to
-	app.Get("/swagger/{any:path}", swagger.CustomWrapHandler(config, swaggerFiles.Handler))
+	// var port = viper.GetString("http.port")
+	var host = viper.GetString("http.host")
 
-	app.Run(iris.Addr(":8080"), iris.WithoutServerError(iris.ErrServerClosed))
+	app.Run(iris.Addr(host+":8080"), iris.WithoutServerError(iris.ErrServerClosed))
 }
